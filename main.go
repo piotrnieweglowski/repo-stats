@@ -2,8 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"path"
 	"strings"
 
@@ -13,8 +15,15 @@ import (
 func main() {
 	http.HandleFunc("/", index)
 	http.HandleFunc("/js/app.js", js)
+	http.HandleFunc("/css/app.css", css)
 	http.HandleFunc("/v1/users/", handleUser)
-	if err := http.ListenAndServe(":80", nil); err != nil {
+	listenAndServe()
+}
+
+func listenAndServe() {
+	port := os.Getenv("REPO_STATS_PORT")
+	addr := fmt.Sprintf(":%s", port)
+	if err := http.ListenAndServe(addr, nil); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -26,6 +35,11 @@ func index(w http.ResponseWriter, r *http.Request) {
 
 func js(w http.ResponseWriter, r *http.Request) {
 	fp := path.Join("templates", "js", "app.js")
+	http.ServeFile(w, r, fp)
+}
+
+func css(w http.ResponseWriter, r *http.Request) {
+	fp := path.Join("templates", "css", "app.css")
 	http.ServeFile(w, r, fp)
 }
 

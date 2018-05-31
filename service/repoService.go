@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
-	"time"
 )
 
 // RepoService provides method to fetch data of the repository from service (github.com)
@@ -22,21 +20,14 @@ type repoService struct {
 // CreateRepoService creates a new instance of RepoService
 // httpClient is created with default timeout set to 5 sec
 func CreateRepoService() RepoService {
-	timeout := time.Duration(5 * time.Second)
 	return repoService{
-		client: http.Client{Timeout: timeout},
+		client: CreateNewClient(),
 	}
 }
 
 func (s repoService) GetRepo(userID string) []Repo {
 	url := fmt.Sprintf("https://api.github.com/users/%s/repos", userID)
-	req, err := http.NewRequest("GET", url, nil)
-	req.SetBasicAuth(os.Getenv("GITHUB_ACCOUNT"), os.Getenv("GITHUB_PASS"))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	resp, err := s.client.Do(req)
+	resp, err := MakeGetRequest(url, s.client)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -44,7 +35,6 @@ func (s repoService) GetRepo(userID string) []Repo {
 	repos := make([]Repo, 0)
 	if err := json.NewDecoder(resp.Body).Decode(&repos); err != nil {
 		log.Println(err)
-
 	}
 	defer resp.Body.Close()
 
@@ -53,27 +43,21 @@ func (s repoService) GetRepo(userID string) []Repo {
 
 func (s repoService) GetRepoStatistics(userID string, repoID string, ch chan interface{}) {
 	url := fmt.Sprintf("https://api.github.com/repos/%s/%s/languages", userID, repoID)
-	req, err := http.NewRequest("GET", url, nil)
-	req.SetBasicAuth(os.Getenv("GITHUB_ACCOUNT"), os.Getenv("GITHUB_PASS"))
+	resp, err := MakeGetRequest(url, s.client)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	resp, err := s.client.Do(req)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	var objmap map[string]int
-	if err := json.NewDecoder(resp.Body).Decode(&objmap); err != nil {
+	var statisticsMap map[string]int
+	if err := json.NewDecoder(resp.Body).Decode(&statisticsMap); err != nil {
 		log.Println(err)
 	}
 	defer resp.Body.Close()
 
-	var returnVal []RepoStatistics
-	for k, v := range objmap {
-		returnVal = append(returnVal, RepoStatistics{Language: k, Size: v})
+	var statistics []RepoStatistics
+	for k, v := range statisticsMap {
+		statistics = append(statistics, RepoStatistics{Language: k, Size: v})
 	}
 
-	ch <- returnVal
+	ch <- statistics
 }
