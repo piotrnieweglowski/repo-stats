@@ -46,7 +46,7 @@ func (s userService) GetUser(id string) User {
 
 func getRepositoriesData(user *User) {
 	repoService := CreateRepoService()
-	user.Repositories = repoService.GetRepo(user.Login)
+	user.Repositories = repoService.GetRepos(*user)
 
 	statistics := make([]RepoStatistics, 0)
 	ch := make(chan interface{}, len(user.Repositories))

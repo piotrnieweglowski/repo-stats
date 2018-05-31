@@ -10,6 +10,7 @@ type User struct {
 	AccountType  string `json:"type"`
 	AvatarURL    string `json:"avatar_url"`
 	GithubURL    string `json:"html_url"`
+	PublicRepos  int    `json:"public_repos"`
 	Repositories []Repo
 	Statistics   []RepoStatistics
 }

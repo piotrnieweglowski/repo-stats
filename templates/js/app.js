@@ -21,6 +21,9 @@ var demo = new Vue({
     statisticsBySizeDesc: function () {
       return _.sortBy(this.statistics, 'Size').reverse();
     },
+    repositoriesByName: function() {
+      return _.sortBy(this.repositories, function (i) { return i.name.toLowerCase();} );
+    },
     anyRepos: function() {
       return this.repositories != null && this.repositories.length > 0;
     }
